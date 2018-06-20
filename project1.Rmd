@@ -1,0 +1,679 @@
+---
+title: "Econ 403A Project 1 Solution"
+author: "Minxuan(Shaun) Wang"
+date: "10/16/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Group member: Minxuan Wang(ID:705060599), Ziwen Gu(ID:805055154) and Yining Qian(ID:505058823)
+
+# [1] Fitting Distributions
+```{r}
+## install.packages("Quandl")
+library(Quandl)
+```
+## (a)
+## Get S&P500 historical data from Quandl
+```{r}
+sp500n<-Quandl("MULTPL/SP500_REAL_PRICE_MONTH", api_key="QR_sKtW9xGJddDnfzCbT", collapse="monthly", start_date="1967-10-12", end_date="2017-10-12")
+sp500<-sp500n$Value
+```
+## Get the ten year treasury bill rate(named:rate10) and the three month treasury bill rate(named:rate3) historical data from Quandl
+```{r}
+rate10n<-Quandl("FRED/DGS10", api_key="QR_sKtW9xGJddDnfzCbT", collapse="monthly", start_date="1967-10-12")
+rate3n<-Quandl("FRED/DTB3", api_key="QR_sKtW9xGJddDnfzCbT", collapse="monthly", start_date="1967-10-12")
+```
+## Calculate the Yield Spread data with rate10 and rate3
+```{r}
+YSn<-data.frame(rate10n$Date,rate10n$Value-rate3n$Value)
+names(YSn)<-c("Date","Value")
+YS<-YSn$Value
+```
+## Get the three month treasury bill rate(named:rate3) historical data from Quandl
+```{r}
+rate3<-rate3n$Value
+```
+## Download the Japanese Central Bank¡¯s interest rates and read this csv
+```{r}
+setwd("D:/Econ 403A")
+JPraten<-read.csv("JPrate.csv")
+JPrate<-JPraten$InterestRate
+```
+## Use the datasets in (a)
+## Customize the plot and Add the density curve
+```{r}
+## S&P 500
+hist(sp500,col=8,ylim=c(0,0.002),prob=TRUE)
+lines(density(sp500),col="red",lwd=3)
+```
+```{r}
+## YS
+hist(YS,col=8,ylim=c(0,0.35),prob=TRUE)
+lines(density(YS),col="red",lwd=3)
+```
+```{r}
+##rate3
+hist(rate3,col=8,ylim=c(0,0.20),prob=TRUE)
+lines(density(rate3),col="red",lwd=3)
+```
+```{r}
+##JPrate
+hist(JPrate,col=8,ylim=c(0,0.50),prob=TRUE)
+lines(density(JPrate),col="red",lwd=3)
+```
+
+## (b)
+## Use the package(fitdistrplus)
+```{r}
+## install.packages('fitdistrplus')
+library(fitdistrplus)
+```
+## 1.Try to fit S&P 500 data into three kinds of distributions
+```{r}
+fitsp500n<-fitdist(sp500,"norm")
+plot(fitsp500n)
+
+fitsp500w<-fitdist(sp500,"weibull")
+plot(fitsp500w)
+
+fitsp500l<-fitdist(sp500,"lnorm")
+plot(fitsp500l)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal","weibull","lognormal")
+
+cdfcomp(list(fitsp500n,fitsp500w,fitsp500l),legendtext=c("norm","Weibull","lognormal"))
+denscomp(list(fitsp500n,fitsp500w,fitsp500l),legendtext=c("norm","Weibull","lognormal"))
+qqcomp(list(fitsp500n,fitsp500w,fitsp500l),legendtext=c("norm","Weibull","lognormal"))
+ppcomp(list(fitsp500n,fitsp500w,fitsp500l),legendtext=c("norm","Weibull","lognormal"))
+gofstat(list(fitsp500n,fitsp500w,fitsp500l),fitnames=c("norm","Weibull","lognormal"))
+```
+## So I think the SP& 500 data fits in the lognormal distribution better. 
+## 2.Try to fit YS data into the normal distribution(Because it includes negative numbers, only the normal distribution can be used)
+```{r}
+fitYSn<-fitdist(YS,"norm")
+plot(fitYSn)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal")
+
+cdfcomp(list(fitYSn),legendtext=c("norm"))
+denscomp(list(fitYSn),legendtext=c("norm"))
+qqcomp(list(fitYSn),legendtext=c("norm"))
+ppcomp(list(fitYSn),legendtext=c("norm"))
+```
+## So the YS data fits in the normal distribution better.
+## 3.Try to fit rate3 data into the normal distribution(Because it includes negative numbers, only the normal distribution can be used)
+```{r}
+fitrate3n<-fitdist(rate3,"norm")
+plot(fitrate3n)
+
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal")
+
+cdfcomp(list(fitrate3n),legendtext=c("norm"))
+denscomp(list(fitrate3n),legendtext=c("norm"))
+qqcomp(list(fitrate3n),legendtext=c("norm"))
+ppcomp(list(fitrate3n),legendtext=c("norm"))
+```
+## So the YS data fits in the normal distribution better.
+## 4.Try to fit JPrate data into four kinds of distributions
+```{r}
+fitJPraten<-fitdist(JPrate,"norm")
+plot(fitJPraten)
+
+fitJPratew<-fitdist(JPrate,"weibull")
+plot(fitJPratew)
+
+fitJPrateg<-fitdist(JPrate,"gamma")
+plot(fitJPrateg)
+
+fitJPratel<-fitdist(JPrate,"lnorm")
+plot(fitJPratel)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal","weibull","gamma","lognormal")
+
+cdfcomp(list(fitJPraten,fitJPratew,fitJPrateg,fitJPratel),legendtext=c("norm","Weibull","gamma","lognormal"))
+denscomp(list(fitJPraten,fitJPratew,fitJPrateg,fitJPratel),legendtext=c("norm","Weibull","gamma","lognormal"))
+qqcomp(list(fitJPraten,fitJPratew,fitJPrateg,fitJPratel),legendtext=c("norm","Weibull","gamma","lognormal"))
+ppcomp(list(fitJPraten,fitJPratew,fitJPrateg,fitJPratel),legendtext=c("norm","Weibull","gamma","lognormal"))
+gofstat(list(fitJPraten,fitJPratew,fitJPrateg,fitJPratel),fitnames=c("norm","Weibull","gamma","lognormal"))
+```
+## So I think the JPrate data fits in the gamma distribution better. 
+
+## (c)
+## I processed these data in Excel to separate the "recession" and "nonrecession" periods and then read the csv
+## Get the recession period S&P 500 data(named:sp500rec)
+```{r}
+sp500rec<-read.csv("sp500rec.csv")
+sp500rec<-sp500rec$Value
+```
+## Get the recession period YS data(named:YSrec)
+```{r}
+YSrec<-read.csv("YSrec.csv")
+YSrec<-YSrec$Value
+```
+## Get the recession period rate3 data(named:rate3rec)
+```{r}
+rate3rec<-read.csv("rate3.csv")
+rate3rec<-rate3rec$Value
+```
+## Get the recession period JPrate data(named:JPraterec)
+```{r}
+JPraterec<-read.csv("JPraterec.csv")
+JPraterec<-JPraterec$InterestRate
+```
+## Use the datasets in (c)
+## Customize the plot and Add the density curve
+```{r}
+## S&P 500
+hist(sp500rec,col=8,ylim=c(0,0.002),prob=TRUE)
+lines(density(sp500rec),col="red",lwd=3)
+```
+```{r}
+## YS
+hist(YSrec,col=8,ylim=c(0,0.5),prob=TRUE)
+lines(density(YSrec),col="red",lwd=3)
+```
+```{r}
+##rate3
+hist(rate3rec,col=8,ylim=c(0,0.20),prob=TRUE)
+lines(density(rate3rec),col="red",lwd=3)
+```
+```{r}
+##JPrate
+hist(JPraterec,col=8,ylim=c(0,0.50),prob=TRUE)
+lines(density(JPraterec),col="red",lwd=3)
+```
+
+## Try to fit recession period S&P 500 data into three kinds of distributions
+```{r}
+fitsp500recn<-fitdist(sp500rec,"norm")
+plot(fitsp500recn)
+
+fitsp500recw<-fitdist(sp500rec,"weibull")
+plot(fitsp500recw)
+
+fitsp500recl<-fitdist(sp500rec,"lnorm")
+plot(fitsp500recl)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal","weibull","lognormal")
+
+cdfcomp(list(fitsp500recn,fitsp500recw,fitsp500recl),legendtext=c("norm","Weibull","lognormal"))
+denscomp(list(fitsp500recn,fitsp500recw,fitsp500recl),legendtext=c("norm","Weibull","lognormal"))
+qqcomp(list(fitsp500recn,fitsp500recw,fitsp500recl),legendtext=c("norm","Weibull","lognormal"))
+ppcomp(list(fitsp500recn,fitsp500recw,fitsp500recl),legendtext=c("norm","Weibull","lognormal"))
+gofstat(list(fitsp500recn,fitsp500recw,fitsp500recl),fitnames=c("norm","Weibull","lognormal"))
+```
+## So I think the recession period SP& 500 data fits in the lognormal distribution better.
+## Try to fit recession period YS data into normal distribution
+```{r}
+fitYSrecn<-fitdist(YSrec,"norm")
+plot(fitYSrecn)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal")
+
+cdfcomp(list(fitYSrecn),legendtext=c("norm"))
+denscomp(list(fitYSrecn),legendtext=c("norm"))
+qqcomp(list(fitYSrecn),legendtext=c("norm"))
+ppcomp(list(fitYSrecn),legendtext=c("norm"))
+```
+## So the recession period YS data fits in the normal distribution better.
+## Try to fit recession period rate3 data into normal distribution
+```{r}
+fitrate3recn<-fitdist(rate3rec,"norm")
+plot(fitrate3recn)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal")
+
+cdfcomp(list(fitrate3recn),legendtext=c("norm"))
+denscomp(list(fitrate3recn),legendtext=c("norm"))
+qqcomp(list(fitrate3recn),legendtext=c("norm"))
+ppcomp(list(fitrate3recn),legendtext=c("norm"))
+```
+## So the recession period rate3 data fits in the normal distribution better.
+## Try to fit recession period JPrate data into four kinds of distributions
+```{r}
+fitJPraterecn<-fitdist(JPraterec,"norm")
+plot(fitJPraterecn)
+
+fitJPraterecw<-fitdist(JPraterec,"weibull")
+plot(fitJPraterecw)
+
+fitJPraterecg<-fitdist(JPraterec,"gamma")
+plot(fitJPraterecg)
+
+fitJPraterecl<-fitdist(JPraterec,"lnorm")
+plot(fitJPraterecl)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal","weibull","gamma","lognormal")
+
+cdfcomp(list(fitJPraterecn,fitJPraterecw,fitJPraterecg,fitJPraterecl),legendtext=c("norm","Weibull","gamma","lognormal"))
+denscomp(list(fitJPraterecn,fitJPraterecw,fitJPraterecg,fitJPraterecl),legendtext=c("norm","Weibull","gamma","lognormal"))
+qqcomp(list(fitJPraterecn,fitJPraterecw,fitJPraterecg,fitJPraterecl),legendtext=c("norm","Weibull","gamma","lognormal"))
+ppcomp(list(fitJPraterecn,fitJPraterecw,fitJPraterecg,fitJPraterecl),legendtext=c("norm","Weibull","gamma","lognormal"))
+gofstat(list(fitJPraterecn,fitJPraterecw,fitJPraterecg,fitJPraterecl),fitnames=c("norm","Weibull","gamma","lognormal"))
+```
+## So I think the recession period JPrate data fits in the gamma distribution better. 
+
+## (d)
+## Similarly, I gained the nonrecession periods data in Excel and then read the csv
+## Get the nonrecession period S&P 500 data(named:sp500nr)
+```{r}
+sp500nonr<-read.csv("sp500nonr.csv")
+sp500nonr<-sp500nonr$Value
+```
+## Get the nonrecession period YS data(named:YSnonr)
+```{r}
+YSnonr<-read.csv("YSnonr.csv")
+YSnonr<-YSnonr$Value
+```
+## Get the nonrecession period rate3 data(named:rate3nonr)
+```{r}
+rate3nonr<-read.csv("rate3.csv")
+rate3nonr<-rate3nonr$Value
+```
+## Get the nonrecession period JPrate data(named:JPratenonr)
+```{r}
+JPratenonr<-read.csv("JPratenonr.csv")
+JPratenonr<-JPratenonr$InterestRate
+```
+## Use the datasets in (d)
+## Customize the plot and Add the density curve
+```{r}
+## S&P 500
+hist(sp500nonr,col=8,ylim=c(0,0.002),prob=TRUE)
+lines(density(sp500nonr),col="red",lwd=3)
+```
+```{r}
+## YS
+hist(YSnonr,col=8,ylim=c(0,0.35),prob=TRUE)
+lines(density(YSnonr),col="red",lwd=3)
+```
+```{r}
+##rate3
+hist(rate3nonr,col=8,ylim=c(0,0.20),prob=TRUE)
+lines(density(rate3nonr),col="red",lwd=3)
+```
+```{r}
+##JPrate
+hist(JPratenonr,col=8,ylim=c(0,0.50),prob=TRUE)
+lines(density(JPratenonr),col="red",lwd=3)
+```
+## Try to fit nonrecession period S&P 500 data into three kinds of distributions
+```{r}
+fitsp500nonrn<-fitdist(sp500nonr,"norm")
+plot(fitsp500nonrn)
+
+fitsp500nonrw<-fitdist(sp500nonr,"weibull")
+plot(fitsp500nonrw)
+
+fitsp500nonrl<-fitdist(sp500nonr,"lnorm")
+plot(fitsp500nonrl)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal","weibull","lognormal")
+
+cdfcomp(list(fitsp500nonrn,fitsp500nonrw,fitsp500nonrl),legendtext=c("norm","Weibull","lognormal"))
+denscomp(list(fitsp500nonrn,fitsp500nonrw,fitsp500nonrl),legendtext=c("norm","Weibull","lognormal"))
+qqcomp(list(fitsp500nonrn,fitsp500nonrw,fitsp500nonrl),legendtext=c("norm","Weibull","lognormal"))
+ppcomp(list(fitsp500nonrn,fitsp500nonrw,fitsp500nonrl),legendtext=c("norm","Weibull","lognormal"))
+gofstat(list(fitsp500nonrn,fitsp500nonrw,fitsp500nonrl),fitnames=c("norm","Weibull","lognormal"))
+```
+## So I think the nonrecession period SP& 500 data fits in the lognormal distribution better.
+## Try to fit nonrecession period YS data into normal distribution
+```{r}
+fitYSnonrn<-fitdist(YSnonr,"norm")
+plot(fitYSnonrn)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal")
+
+cdfcomp(list(fitYSnonrn),legendtext=c("norm"))
+denscomp(list(fitYSnonrn),legendtext=c("norm"))
+qqcomp(list(fitYSnonrn),legendtext=c("norm"))
+ppcomp(list(fitYSnonrn),legendtext=c("norm"))
+```
+## So the nonrecession period YS data fits in the normal distribution better.
+## Try to fit nonrecession period rate3 data into normal distribution
+```{r}
+fitrate3nonrn<-fitdist(rate3nonr,"norm")
+plot(fitrate3nonrn)
+
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal")
+
+cdfcomp(list(fitrate3nonrn),legendtext=c("norm"))
+denscomp(list(fitrate3nonrn),legendtext=c("norm"))
+qqcomp(list(fitrate3nonrn),legendtext=c("norm"))
+ppcomp(list(fitrate3nonrn),legendtext=c("norm"))
+```
+## So the nonrecession period rate3 data fits in the normal distribution better.
+## Try to fit nonrecession period JPrate data into four kinds of distributions
+```{r}
+fitJPratenonrn<-fitdist(JPratenonr,"norm")
+plot(fitJPratenonrn)
+
+fitJPratenonrw<-fitdist(JPratenonr,"weibull")
+plot(fitJPratenonrw)
+
+fitJPratenonrg<-fitdist(JPratenonr,"gamma")
+plot(fitJPratenonrg)
+
+fitJPratenonrl<-fitdist(JPratenonr,"lnorm")
+plot(fitJPratenonrl)
+
+par(mfrow=c(2,2))
+
+plot.legend<-c("normal","weibull","gamma","lognormal")
+
+cdfcomp(list(fitJPratenonrn,fitJPratenonrw,fitJPratenonrg,fitJPratenonrl),legendtext=c("norm","Weibull","gamma","lognormal"))
+denscomp(list(fitJPratenonrn,fitJPratenonrw,fitJPratenonrg,fitJPratenonrl),legendtext=c("norm","Weibull","gamma","lognormal"))
+qqcomp(list(fitJPratenonrn,fitJPratenonrw,fitJPratenonrg,fitJPratenonrl),legendtext=c("norm","Weibull","gamma","lognormal"))
+ppcomp(list(fitJPratenonrn,fitJPratenonrw,fitJPratenonrg,fitJPratenonrl),legendtext=c("norm","Weibull","gamma","lognormal"))
+gofstat(list(fitJPratenonrn,fitJPratenonrw,fitJPratenonrg,fitJPratenonrl),fitnames=c("norm","Weibull","gamma","lognormal"))
+```
+## So I think the nonrecession period JPrate data fits in the gamma distribution better. 
+
+## (e)
+## There are not any noticeable differences between the estimated distributions based on how I subset the data. I guess it is because if in general the sample obeys a certain distribution, so a part of the sample is still obey this certain distribution.
+
+## (f)
+```{r}
+## S&P 500
+ks.test(sp500rec,sp500nonr) 
+## YS
+ks.test(YSrec,YSnonr)
+## rate3
+ks.test(rate3rec,rate3nonr)
+## JPrate
+ks.test(JPraterec,JPratenonr)
+```
+## According to the K-S test, the value of D is small, p-value>0.05, we should reject the null, which means they do NOT obey the same distributions(I don't know why).
+
+
+# [2] Characterizing Financial Data
+## I choose four companies: coca-cola(cola-data1), Goldman Sachs(gs-data2), Walmart(walmart-data3) and Visa(visa-data4) and their stock prices in one year period(2016-10-13 to 2017-10-13).
+## (a)
+##  Plot cola historical prices
+```{r}
+data1<-{Quandl("EOD/KO", api_key="QR_sKtW9xGJddDnfzCbT", start_date="2016-10-13")}
+print(data1)
+plot(x=data1$Date,
+y=data1$Adj_Close,
+type="l",
+main="cola",
+xlab="date",
+ylab="price")
+```
+##  Plot gs historical prices
+```{r}
+data2<-{Quandl("EOD/GS", api_key="QR_sKtW9xGJddDnfzCbT", start_date="2016-10-13")}
+print(data2)
+plot(x=data2$Date,
+y=data2$Adj_Close,
+type="l",
+main="goldman sachs",
+xlab="date",
+ylab="price")
+```
+##  Plot walmart historical prices
+```{r}
+data3<-{Quandl("EOD/WMT", api_key="QR_sKtW9xGJddDnfzCbT", start_date="2016-10-13")}
+print(data3)
+plot(x=data3$Date,
+y=data3$Adj_Close,
+type="l",
+main="walmart",
+xlab="date",
+ylab="price")
+```
+##  Plot visa historical prices
+```{r}
+data4<-{Quandl("EOD/V", api_key="QR_sKtW9xGJddDnfzCbT", start_date="2016-10-13")}
+print(data4)
+plot(x=data4$Date,
+y=data4$Adj_Close,
+type="l",
+main="visa",
+xlab="date",
+ylab="price")
+```
+## (b)
+## Get S&P 500 historical data(from 2016-10-13-2017-10-13, to get daily frequency data I use S&P500 future price)
+```{r}
+data5<-{Quandl("CHRIS/CME_SP1", api_key="QR_sKtW9xGJddDnfzCbT", start_date="2016-10-13")}
+```
+## Or using to Yahoo financial database(GSPC)
+
+## Compute the relevant summary statistics
+```{r}
+## cola
+mean(data1$Adj_Close)
+
+sd(data1$Adj_Close)
+
+median(data1$Adj_Close)
+
+quantile(data1$Adj_Close, probs = c(0.25,0.75))
+
+cor(data1$Adj_Close,data5$Settle)
+```
+```{r}
+## gs
+mean(data2$Adj_Close)
+
+sd(data2$Adj_Close)
+
+median(data2$Adj_Close)
+
+quantile(data2$Adj_Close, probs = c(0.25,0.75))
+
+cor(data2$Adj_Close,data5$Settle)
+```
+```{r}
+## walmart
+mean(data3$Adj_Close)
+
+sd(data3$Adj_Close)
+
+median(data3$Adj_Close)
+
+quantile(data3$Adj_Close, probs = c(0.25,0.75))
+
+cor(data3$Adj_Close,data5$Settle)
+```
+```{r}
+## visa
+mean(data4$Adj_Close)
+
+sd(data4$Adj_Close)
+
+median(data4$Adj_Close)
+
+quantile(data4$Adj_Close, probs = c(0.25,0.75))
+
+cor(data4$Adj_Close,data5$Settle)
+```
+## Use the result from (b) to output the table
+```{r}
+cola<-c(45.66187,0.5066762,45.63,45.4075,46.11,-0.05082832)
+goldmansachs<-c(235.0642,6.83463,235.115,229.57,240.8925,0.9113053)
+walmart<-c(80.53417,2.437006,79.645,79.2025,80.41,0.577454)
+visa<-c(105.7504,1.468183,105.5,105.1725,106.3625,0.7459124)
+
+mytable<-data.frame(cola,goldmansachs,walmart,visa)
+
+row.names(mytable)<-c("mean","sd","median","Q1","Q3","correlation")
+
+mytable
+```
+## Plot a single ???gure showing the boxplots of all 4 stocks and the S&P500
+```{r}
+colabox<-(data1$Adj_Close)
+goldmansachsbox<-(data2$Adj_Close)
+walmartbox<-(data3$Adj_Close)
+visabox<-(data4$Adj_Close)
+SP500box<-(data5$Settle)
+
+boxplot(colabox,goldmansachsbox,walmartbox,visabox,SP500box)
+```
+
+## (d)
+## Convert the prices to daily returns(I use the Quantmod package, and remove the N/A value, recola, regs, rewalmart and revisa)
+```{r}
+require(quantmod)
+## cola
+cola1<-data1$Adj_Close
+coladr<-Delt(cola1)
+coladr<-coladr[!is.na(coladr)]
+
+hist(coladr,col=8,ylim=c(0,80),prob=TRUE)
+lines(density(coladr),col="red",lwd=3)
+## gs
+gs1<-data2$Adj_Close
+gsdr<-Delt(gs1)
+gsdr<-gsdr[!is.na(gsdr)]
+
+hist(gsdr,col=8,ylim=c(0,40),prob=TRUE)
+lines(density(gsdr),col="red",lwd=3)
+## walmart
+walmart1<-data3$Adj_Close
+walmartdr<-Delt(walmart1)
+walmartdr<-walmartdr[!is.na(walmartdr)]
+
+hist(walmartdr,col=8,ylim=c(0,60),prob=TRUE)
+lines(density(walmartdr),col="red",lwd=3)
+## visa
+visa1<-data4$Adj_Close
+visadr<-Delt(visa1)
+visadr<-visadr[!is.na(visadr)]
+
+hist(visadr,col=8,ylim=c(0,60),prob=TRUE)
+lines(density(visadr),col="red",lwd=3)
+```
+
+## (e)
+## Compute the excess return of each stock with respect to the S&P500(Recola, Regs, Rewalmart and Revisa)
+```{r}
+sp5001<-data5$Settle
+sp500dr<-Delt(sp5001)
+sp500dr<-sp500dr[!is.na(sp500dr)]
+## cola
+Recola=coladr-sp500dr
+## gs
+Regs=gsdr-sp500dr
+## walmart
+Rewalmart=walmartdr-sp500dr
+## visa
+Revisa=visadr-sp500dr
+```
+## Fit distribution
+## For Recola, the value must be  positive to fit an Weibull/gamma/lognormal distribution, so I fit it in the normal distribution
+```{r}
+fitRecolan<-fitdist(Recola,"norm")
+plot(fitRecolan)
+```
+## We can see it fits the normal distribution well.
+## Similarly, considering there are negative numbers, I only use the normal distribution to fit these three values
+```{r}
+## Regs
+fitRegsn<-fitdist(Regs,"norm")
+plot(fitRegsn)
+## Rewalmart
+fitRewalmartn<-fitdist(Rewalmart,"norm")
+plot(fitRewalmartn)
+## Revisa
+fitRevisan<-fitdist(Revisa,"norm")
+plot(fitRevisan)
+```
+## They all fit in the normal distribution well.
+## Calculate the probability of (returns exceed the S&P500 returns by 3%)
+```{r}
+which(Recola>0.03)
+```
+## P(Recola>3%)=1/251
+```{r}
+which(Regs>0.03)
+```
+## P(Regs>3%)=8/251
+```{r}
+which(Rewalmart>0.03)
+```
+## P(Rewalmart>3%)=2/251
+```{r}
+which(Revisa>0.03)
+```
+## P(Revisa>3%)=1/251
+
+## (f)
+## I recommend to invest Goldman Sachs because its excess return is higher.
+
+
+# [3] Sequential Bayesian Learning
+## (a)
+## according to the conditional probability formula,P(C+|T+)=(P(C+)*P(T+|C+))/(P(C+)*P(T+|C+))+(P(C-)*P(T+|C-)) 
+## substitute the values to this formula, we can get:
+## P(C+|T+)=0.01*0.99/(0.01*0.99+0.99*0.1)=1/11
+
+## (b)
+## Creat a loop, by using 1/11 as the P(C+) in second step and the result we get in step 2 as the new P(C+)...
+```{r}
+rm(list=ls())
+P<-numeric()
+n<-0
+p<-0.01
+while(p<=0.95){
+  p=0.99*p/(0.99*p+0.1*(1-p))
+n=n+1
+P[n]=data.frame(p,n)
+print(n)
+}
+
+plot(c(1:n),P,xlab="Trial Number",ylab="Probability",main="Probability V.S Trial Number")
+```
+## So after four trails the probability will greater than 95%.
+## (c)
+## Revise the loop
+```{r}
+rm(list=ls())
+P<-numeric()
+n<-0
+p<-0.01
+while(p<=0.95){
+  p=0.99*p/(0.99*p+0.1*(1-p))
+n=n+1
+if(n==3){
+  p=0.01*p/(0.01*p+0.9*(1-p))
+}
+P[n]=data.frame(p,n)
+print(n)
+}
+
+plot(c(1:n),P,xlab="Trial Number",ylab="Probability",main="Probability V.S Trial Number")
+```
+
+
